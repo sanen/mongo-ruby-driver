@@ -32,21 +32,43 @@ module MongoOrchestration
 
     def run
       setup
-      # run each phase
+      @phases.each do |phase|
+        run_phase(phase)
+      end
     end
 
     private
 
+    def run_phase(phase)
+      if phase['tests']
+        phase['tests'].each do |test|
+          begin
+            if test['operation'] == "insertOne"
+              @collection.insert_one(test['doc'])
+            else
+              @collection.find.count
+            end
+          rescue => ex
+            raise ex unless test['outcome']['ok'] == 0
+          end
+          raise Exception unless test['outcome']['ok'] == 1
+        end
+      elsif phase['MO-operations']
+      elsif phase['client-operations']
+      end
+    end
+
     def setup
       setup = @spec['setup'] || {}
-      collection = @client[@spec['collection'] || TEST_COLL]
+      @collection ||= @client[@spec['collection'] || TEST_COLL]
       setup['operations'].each do |op|
         if op['action'] == 'insertOne'
-          collection.insert_one(op['doc'])
+          @collection.insert_one(op['doc'])
         else
-          collection.find_one
+          @collection.find.count
         end
       end
+      @phases = @spec['phases']
     end
 
     def create(options = {})
@@ -61,7 +83,7 @@ module MongoOrchestration
 
     def create_body
       body = { name: 'mongod' }
-      body.merge!(@spec && @spec['config'] ? @spec['config'] :
+      body.merge!(@spec && @spec['init_config'] ? @spec['init_config'] :
         { procParams: { journal: true } })
     end
   end

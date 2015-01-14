@@ -12,7 +12,9 @@ description: "Successful read from standalone"
 
 type: "standalone"
 
-config: { procParams: { journal: true } }
+init_config: { procParams: { journal: true } }
+
+uriOptions: {}
 
 setup: {
           operations: [
