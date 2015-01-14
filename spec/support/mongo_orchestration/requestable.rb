@@ -38,6 +38,7 @@ module MongoOrchestration
     # @since 2.0.0
     def initialize(options = {})
       @base_path = options[:path] || MongoOrchestration::DEFAULT_BASE_URI
+      @spec = options[:spec]
       create(options)
     end
 

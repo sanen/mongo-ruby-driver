@@ -97,12 +97,15 @@ def initialize_scanned_client!
   Mongo::Client.new([ '127.0.0.1:27017' ], database: TEST_DB)
 end
 
-def initialize_mo_standalone!(path = nil)
-  @standalone ||= MongoOrchestration.get(:standalone, path: path)
+def initialize_mo!(options = {})
+  spec = options[:spec]
+  type = (spec && spec[:type]) || :standalone
+  path = options[:path]
+  @mo ||= MongoOrchestration.get(type, spec: spec, path: path)
 end
 
-def stop_mo_standalone!
-  @standalone.stop if @standalone
+def stop_mo!
+  @mo.stop if @mo
 end
 
 def mongo_orchestration_available?(path = nil)

@@ -1,0 +1,35 @@
+#A. Write
+#         Setup:
+#          - Servers:
+#             - serverA: standalone
+#          - Op: Insert
+#
+#1. Description: standalone available
+#               (mo step) server started
+#               * Op succeeds
+
+description: "Successful read from standalone"
+
+type: "standalone"
+
+config: { procParams: { journal: true } }
+
+setup: {
+          operations: [
+                       {
+                         action: "insertOne",
+                         doc: { x: 1 }
+                        }
+                      ]
+        }
+
+phases: [
+          {
+            tests: [
+                    {
+                      operation: "findOne",
+                      outcome: { ok: 1 }
+                    }
+                  ]
+          }
+        ]

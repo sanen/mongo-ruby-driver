@@ -16,6 +16,8 @@ module MongoOrchestration
   class Standalone
     include Requestable
 
+    ORCHESTRATION = 'servers'
+
     attr_reader :client
     attr_reader :id
 
@@ -24,34 +26,43 @@ module MongoOrchestration
     # @since 2.0.0
     def stop
       request_content = { body: { action: 'stop' } }
-      @config = post("#{orchestration}/#{id}", request_content)
+      @config = post("#{ORCHESTRATION}/#{id}", request_content)
       self
+    end
+
+    def run
+      setup
+      # run each phase
     end
 
     private
 
+    def setup
+      setup = @spec['setup'] || {}
+      collection = @client[@spec['collection'] || TEST_COLL]
+      setup['operations'].each do |op|
+        if op['action'] == 'insertOne'
+          collection.insert_one(op['doc'])
+        else
+          collection.find_one
+        end
+      end
+    end
+
     def create(options = {})
       unless alive?
-        @config = post(orchestration,
-                      { body: initialize_config[:request_content] })
+        @config = post(ORCHESTRATION,
+                      { body: create_body })
         @id = @config['id']
         @client = Mongo::Client.new("#{@config['mongodb_uri']}")
       end
       self
     end
 
-    def orchestration
-      initialize_config[:orchestration]
-    end
-
-    def initialize_config
-     {
-        orchestration: 'servers',
-        request_content: {
-                          name: 'mongod',
-                          procParams: { journal: true }
-                         }
-      }
+    def create_body
+      body = { name: 'mongod' }
+      body.merge!(@spec && @spec['config'] ? @spec['config'] :
+        { procParams: { journal: true } })
     end
   end
 end
