@@ -48,7 +48,9 @@ module Mongo
           #
           # @since 2.0.0
           def message(server)
-            Protocol::Query.new(db_name, Database::COMMAND, selector, options)
+            opts = options
+            opts[:max_bson_size_extra] = Operation::Write::Command::MAX_BSON_SIZE_EXTRA
+            Protocol::Query.new(db_name, Database::COMMAND, selector, opts)
           end
         end
       end

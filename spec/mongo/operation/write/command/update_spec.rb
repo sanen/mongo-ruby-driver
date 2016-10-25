@@ -103,7 +103,9 @@ describe Mongo::Operation::Write::Command::Update do
     end
 
     it 'creates the correct Command message' do
-      expect(Mongo::Protocol::Query).to receive(:new).with(TEST_DB, '$cmd', expected_selector, { limit: -1 })
+      expect(Mongo::Protocol::Query).to receive(:new).with(TEST_DB, '$cmd', expected_selector,
+                                                           { limit: -1,
+                                                             max_bson_size_extra: Mongo::Operation::Write::Command::MAX_BSON_SIZE_EXTRA } )
       op.send(:message, double('server'))
     end
   end

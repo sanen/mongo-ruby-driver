@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+require 'pry-nav'
 module Mongo
   module Protocol
 
@@ -99,9 +99,11 @@ module Mongo
       # @param buffer [String] buffer where the message should be inserted
       # @return [String] buffer containing the serialized message
       def serialize(buffer = BSON::ByteBuffer.new, max_bson_size = nil)
+        max_size = max_bson_size && @max_bson_size_extra ?
+                     max_bson_size + @max_bson_size_extra : max_bson_size
         start = buffer.length
         serialize_header(buffer)
-        serialize_fields(buffer, max_bson_size)
+        serialize_fields(buffer, max_size)
         buffer.replace_int32(start, buffer.length - start)
       end
 

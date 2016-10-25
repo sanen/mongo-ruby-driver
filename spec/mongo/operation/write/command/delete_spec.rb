@@ -99,7 +99,8 @@ describe Mongo::Operation::Write::Command::Delete do
       expect(Mongo::Protocol::Query).to receive(:new).with(authorized_collection.database.name,
                                                            '$cmd',
                                                            expected_selector,
-                                                           { limit: -1 } )
+                                                           { limit: -1,
+                                                             max_bson_size_extra: Mongo::Operation::Write::Command::MAX_BSON_SIZE_EXTRA } )
       op.send(:message, double('server'))
     end
   end

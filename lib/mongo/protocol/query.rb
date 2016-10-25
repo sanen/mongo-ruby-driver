@@ -66,6 +66,7 @@ module Mongo
         @limit = determine_limit
         @skip = options[:skip]  || 0
         @flags = options[:flags] || []
+        @max_bson_size_extra = options[:max_bson_size_extra]
         @upconverter = Upconverter.new(collection, selector, options, flags)
         super
       end

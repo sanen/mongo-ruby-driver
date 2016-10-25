@@ -21,3 +21,14 @@ require 'mongo/operation/write/command/create_index'
 require 'mongo/operation/write/command/create_user'
 require 'mongo/operation/write/command/update_user'
 require 'mongo/operation/write/command/remove_user'
+
+module Mongo
+  module Operation
+    module Write
+      module Command
+
+        MAX_BSON_SIZE_EXTRA = 1024 * 16
+      end
+    end
+  end
+end
