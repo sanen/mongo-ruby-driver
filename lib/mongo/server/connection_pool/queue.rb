@@ -31,7 +31,7 @@ module Mongo
         MAX_SIZE = 5.freeze
 
         # The default min size for the queue.
-        MIN_SIZE = 1.freeze
+        MIN_SIZE = 0.freeze
 
         # The default timeout, in seconds, to wait for a connection.
         WAIT_TIMEOUT = 1.freeze
@@ -88,7 +88,7 @@ module Mongo
         # @since 2.0.0
         def enqueue(connection)
           mutex.synchronize do
-            queue.unshift(connection)
+            queue.unshift(connection.record_checkin!)
             resource.broadcast
           end
         end
@@ -163,6 +163,22 @@ module Mongo
         # @since 2.0.0
         def wait_timeout
           @wait_timeout ||= options[:wait_queue_timeout] || WAIT_TIMEOUT
+        end
+
+        def max_idle_time
+          @max_idle_time ||= options[:max_idle_time]
+        end
+
+        def close_stale_sockets!
+          if max_idle_time
+            mutex.synchronize do
+              queue.each do |connection|
+                if last_checkin = connection.last_checkin
+                  connection.disconnect! if (Time.now - last_checkin) > max_idle_time
+                end
+              end
+            end
+          end
         end
 
         private

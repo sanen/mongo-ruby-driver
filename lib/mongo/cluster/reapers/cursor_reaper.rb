@@ -159,6 +159,7 @@ module Mongo
           end
         end
       end
+      alias :execute :kill_cursors
 
       private
 

@@ -39,6 +39,8 @@ module Mongo
       # @since 2.1.0
       PING_BYTES = PING_MESSAGE.serialize.to_s.freeze
 
+      attr_reader :last_checkin
+
       def_delegators :@server,
                      :features,
                      :max_bson_object_size,
@@ -83,6 +85,7 @@ module Mongo
           socket.close
           @auth_mechanism = nil
           @socket = nil
+          @last_checkin = nil
         end
         true
       end
@@ -133,6 +136,7 @@ module Mongo
         @server = server
         @ssl_options = options.reject { |k, v| !k.to_s.start_with?(SSL) }
         @socket = nil
+        @last_checkin = nil
         @auth_mechanism = nil
         @pid = Process.pid
       end
@@ -169,6 +173,19 @@ module Mongo
       end
       # @deprecated Please use :socket_timeout instead. Will be removed in 3.0.0
       alias :timeout :socket_timeout
+
+      # Record the last checkin time.
+      #
+      # @example Record the checkin time on this connection.
+      #   connection.record_checkin!
+      #
+      # @return [ self ]
+      #
+      # @since 2.5.0
+      def record_checkin!
+        @last_checkin = Time.now
+        self
+      end
 
       private
 
