@@ -165,10 +165,26 @@ module Mongo
           @wait_timeout ||= options[:wait_queue_timeout] || WAIT_TIMEOUT
         end
 
+        # The maximum seconds a socket can remain idle in the connection pool after it
+        #   has been checked out and checked back in.
+        #
+        # @example Get the max idle time.
+        #   queue.max_idle_time
+        #
+        # @return [ Float ] The max socket idle time in seconds.
+        #
+        # @since 2.5.0
         def max_idle_time
           @max_idle_time ||= options[:max_idle_time]
         end
 
+        # Close sockets that have been open for longer than the max idle time, if the
+        #   option is set.
+        #
+        # @example Close the stale sockets
+        #   queue.close_stale_sockets!
+        #
+        # @since 2.5.0
         def close_stale_sockets!
           if max_idle_time
             mutex.synchronize do

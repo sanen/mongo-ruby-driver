@@ -27,7 +27,7 @@ module Mongo
       # @return [ Hash ] options The pool options.
       attr_reader :options
 
-      def_delegators :queue, :close_stale_sockets!
+      def_delegators :@queue, :close_stale_sockets!
 
       # Check a connection back into the pool. Will pull the connection from a
       # thread local stack that should contain it after it was checked out.
@@ -37,7 +37,7 @@ module Mongo
       #
       # @since 2.0.0
       def checkin(connection)
-        queue.enqueue(connection)
+        @queue.enqueue(connection)
       end
 
       # Check a connection out from the pool. If a connection exists on the same
@@ -51,7 +51,7 @@ module Mongo
       #
       # @since 2.0.0
       def checkout
-        queue.dequeue
+        @queue.dequeue
       end
 
       # Disconnect the connection pool.
@@ -63,7 +63,7 @@ module Mongo
       #
       # @since 2.1.0
       def disconnect!
-        queue.disconnect!
+        @queue.disconnect!
       end
 
       # Create the new connection pool.
@@ -111,12 +111,6 @@ module Mongo
       ensure
         checkin(connection) if connection
       end
-
-      protected
-
-      attr_reader :queue
-
-      private
 
       class << self
 

@@ -269,7 +269,7 @@ describe Mongo::Cursor do
 
 
       it 'schedules a kill cursors op' do
-        sleep(Mongo::Cluster::CursorReaper::FREQUENCY + 0.5)
+        sleep(Mongo::Cluster::ReaperExecutor::FREQUENCY)
         expect {
           cursor.to_a
         }.to raise_exception(Mongo::Error::OperationFailure)
