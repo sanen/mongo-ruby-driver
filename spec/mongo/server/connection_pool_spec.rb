@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Mongo::Server::ConnectionPool do
 
   let(:options) do
-    TEST_OPTIONS.merge(max_pool_size: 2)
+    TEST_OPTIONS.merge(max_pool_size: 2, min_pool_size: 1)
   end
 
   let(:address) do
@@ -225,6 +225,62 @@ describe Mongo::Server::ConnectionPool do
 
     it 'disconnects the socket' do
       expect(pool.checkout.send(:socket)).to be_nil
+    end
+  end
+
+  describe '#close_stale_sockets!' do
+
+    let(:options) do
+      TEST_OPTIONS.merge(max_pool_size: 5, min_pool_size: 3, max_idle_time: 0.5)
+    end
+
+    let(:server) do
+      Mongo::Server.new(address, authorized_client.cluster, monitoring, listeners, options)
+    end
+
+    let!(:pool) do
+      described_class.get(server)
+    end
+
+    let(:queue) do
+      pool.instance_variable_get(:@queue).queue
+    end
+
+    context 'when the sockets have not been checked out' do
+
+      before do
+        sleep(0.5)
+        pool.close_stale_sockets!
+      end
+
+      it 'does not close any sockets' do
+        expect(queue.all? { |c| c.connected? }).to be(true)
+      end
+    end
+
+    context 'when a socket is checkout out' do
+
+      context 'when the max_idle_time is reached' do
+
+        let!(:connection) do
+          c = pool.checkout
+          pool.checkin(c)
+          c
+        end
+
+        before do
+          sleep(0.5)
+          pool.close_stale_sockets!
+        end
+
+        it 'closes the stale socket' do
+          expect(connection).not_to be_connected
+        end
+
+        it 'does not close the other sockets' do
+          expect(queue[1..-1].all? { |c| c.connected? }).to be(true)
+        end
+      end
     end
   end
 end

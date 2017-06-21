@@ -27,7 +27,7 @@ module Mongo
       # @return [ Hash ] options The pool options.
       attr_reader :options
 
-      def_delegators :@queue, :close_stale_sockets!
+      def_delegators :queue, :close_stale_sockets!
 
       # Check a connection back into the pool. Will pull the connection from a
       # thread local stack that should contain it after it was checked out.
@@ -111,6 +111,12 @@ module Mongo
       ensure
         checkin(connection) if connection
       end
+
+      protected
+
+      attr_reader :queue
+
+      private
 
       class << self
 

@@ -55,7 +55,7 @@ describe Mongo::Server::ConnectionPool::Queue do
     end
 
     let(:queue) do
-      described_class.new(:max_pool_size => 1) { connection }
+      described_class.new(:max_pool_size => 1, :min_pool_size => 1) { connection }
     end
 
     it 'disconnects all connections in the queue' do
@@ -67,7 +67,9 @@ describe Mongo::Server::ConnectionPool::Queue do
   describe '#enqueue' do
 
     let(:connection) do
-      double('connection')
+      double('connection').tap do |con|
+        allow(con).to receive(:record_checkin!).and_return(con)
+      end
     end
 
     let(:queue) do
@@ -106,8 +108,8 @@ describe Mongo::Server::ConnectionPool::Queue do
         described_class.new { double('connection') }
       end
 
-      it 'creates the queue with the default connections' do
-        expect(queue.size).to eq(1)
+      it 'creates the queue with no default connections' do
+        expect(queue.size).to eq(0)
       end
     end
   end
