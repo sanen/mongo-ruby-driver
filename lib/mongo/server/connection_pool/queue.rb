@@ -188,10 +188,11 @@ module Mongo
         def close_stale_sockets!
           if max_idle_time
             mutex.synchronize do
-              queue.each do |connection|
+              queue.reverse_each do |connection|
                 if last_checkin = connection.last_checkin
                   connection.disconnect! if (Time.now - last_checkin) > max_idle_time
                 end
+                break if queue.index(connection) == min_size
               end
             end
           end
@@ -202,7 +203,7 @@ module Mongo
         def dequeue_connection
           deadline = Time.now + wait_timeout
           loop do
-            return queue.pop unless queue.empty?
+            return queue.shift unless queue.empty?
             connection = create_connection
             return connection if connection
             wait_for_next!(deadline)
