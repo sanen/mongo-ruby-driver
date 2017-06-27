@@ -37,7 +37,7 @@ module Mongo
       #
       # @since 2.0.0
       def checkin(connection)
-        @queue.enqueue(connection)
+        queue.enqueue(connection)
       end
 
       # Check a connection out from the pool. If a connection exists on the same
@@ -51,7 +51,7 @@ module Mongo
       #
       # @since 2.0.0
       def checkout
-        @queue.dequeue
+        queue.dequeue
       end
 
       # Disconnect the connection pool.
@@ -63,7 +63,7 @@ module Mongo
       #
       # @since 2.1.0
       def disconnect!
-        @queue.disconnect!
+        queue.disconnect!
       end
 
       # Create the new connection pool.
@@ -132,9 +132,7 @@ module Mongo
         # @since 2.0.0
         def get(server)
           ConnectionPool.new(server.options) do
-            conn = Connection.new(server, server.options)
-            conn.connect!
-            conn
+            Connection.new(server, server.options)
           end
         end
       end

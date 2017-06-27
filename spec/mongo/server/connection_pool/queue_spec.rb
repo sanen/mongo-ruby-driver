@@ -108,8 +108,8 @@ describe Mongo::Server::ConnectionPool::Queue do
         described_class.new { double('connection') }
       end
 
-      it 'creates the queue with no default connections' do
-        expect(queue.size).to eq(0)
+      it 'creates the queue with the number of default connections' do
+        expect(queue.size).to eq(1)
       end
     end
   end

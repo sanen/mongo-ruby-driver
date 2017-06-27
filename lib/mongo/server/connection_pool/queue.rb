@@ -16,9 +16,8 @@ module Mongo
   class Server
     class ConnectionPool
 
-      # A FIFO queue of connections to be used by the connection pool. This is
-      # based on mperham's connection pool, implemented with a queue instead of a
-      # stack.
+      # A LIFO queue of connections to be used by the connection pool. This is
+      # based on mperham's connection pool.
       #
       # @since 2.0.0
       class Queue
@@ -31,7 +30,7 @@ module Mongo
         MAX_SIZE = 5.freeze
 
         # The default min size for the queue.
-        MIN_SIZE = 0.freeze
+        MIN_SIZE = 1.freeze
 
         # The default timeout, in seconds, to wait for a connection.
         WAIT_TIMEOUT = 1.freeze

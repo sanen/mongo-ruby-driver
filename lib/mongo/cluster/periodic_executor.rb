@@ -15,17 +15,17 @@
 module Mongo
   class Cluster
 
-    class ReaperExecutor
+    class PeriodicExecutor
 
       # The default time interval for the reaper executor to execute.
       #
-      # @since 2.3.0
+      # @since 2.5.0
       FREQUENCY = 1.freeze
 
       # Create a reaper executor.
       #
-      # @example Create a ReaperExecutor.
-      #   Mongo::Cluster::ReaperExecutor.new(reaper)
+      # @example Create a PeriodicExecutor.
+      #   Mongo::Cluster::PeriodicExecutor.new(reaper, reaper2)
       #
       # @api private
       #
@@ -38,7 +38,7 @@ module Mongo
       # Start the thread.
       #
       # @example Start the reaper executor's thread.
-      #   reaper_executor.run!
+      #   periodic_executor.run!
       #
       # @api private
       #
@@ -51,7 +51,7 @@ module Mongo
       # Stop the executor's thread.
       #
       # @example Stop the executors's thread.
-      #   reaper_executor.stop!
+      #   periodic_executor.stop!
       #
       # @api private
       #
@@ -60,6 +60,14 @@ module Mongo
         @thread.kill && @thread.stop?
       end
 
+      # Trigger an execute call on each reaper.
+      #
+      # @example Execute all reapers.
+      #   periodic_executor.execute
+      #
+      # @api private
+      #
+      # @since 2.5.0
       def execute
         @executors.each { |executor| executor.execute }
       end

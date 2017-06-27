@@ -15,7 +15,7 @@
 require 'mongo/cluster/topology'
 require 'mongo/cluster/reapers/socket_reaper'
 require 'mongo/cluster/reapers/cursor_reaper'
-require 'mongo/cluster/reaper_executor'
+require 'mongo/cluster/periodic_executor'
 require 'mongo/cluster/app_metadata'
 
 module Mongo
@@ -180,10 +180,10 @@ module Mongo
 
       @cursor_reaper = CursorReaper.new
       @socket_reaper = SocketReaper.new(self)
-      @reaper_executor = ReaperExecutor.new(@cursor_reaper, @socket_reaper)
-      @reaper_executor.run!
+      @periodic_executor = PeriodicExecutor.new(@cursor_reaper, @socket_reaper)
+      @periodic_executor.run!
 
-      ObjectSpace.define_finalizer(self, self.class.finalize(pools, @reaper_executor))
+      ObjectSpace.define_finalizer(self, self.class.finalize(pools, @periodic_executor))
     end
 
     # Finalize the cluster for garbage collection. Disconnects all the scoped
@@ -198,10 +198,10 @@ module Mongo
     # @return [ Proc ] The Finalizer.
     #
     # @since 2.2.0
-    def self.finalize(pools, reaper_executor)
+    def self.finalize(pools, periodic_executor)
       proc do
-        begin; reaper_executor.execute; rescue; end
-        reaper_executor.stop!
+        begin; periodic_executor.execute; rescue; end
+        periodic_executor.stop!
         pools.values.each do |pool|
           pool.disconnect!
         end
@@ -363,8 +363,8 @@ module Mongo
     #
     # @since 2.1.0
     def disconnect!
-      begin; @reaper_executor.execute; rescue; end
-      @reaper_executor.stop!
+      begin; @periodic_executor.execute; rescue; end
+      @periodic_executor.stop!
       @servers.each { |server| server.disconnect! } and true
     end
 
@@ -379,7 +379,7 @@ module Mongo
     def reconnect!
       scan!
       servers.each { |server| server.reconnect! }
-      @reaper_executor.restart! and true
+      @periodic_executor.restart! and true
     end
 
     # Add hosts in a description to the cluster.

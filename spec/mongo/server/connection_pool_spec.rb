@@ -110,6 +110,17 @@ describe Mongo::Server::ConnectionPool do
         expect(pool.checkout).to_not eql(connection)
       end
     end
+
+    context 'when connections are checked out and checked back in' do
+
+      it 'pulls the connection from the front of the queue' do
+        first = pool.checkout
+        second = pool.checkout
+        pool.checkin(second)
+        pool.checkin(first)
+        expect(pool.checkout).to be(first)
+      end
+    end
   end
 
   describe '#disconnect!' do
@@ -230,10 +241,6 @@ describe Mongo::Server::ConnectionPool do
 
   describe '#close_stale_sockets!' do
 
-    let(:options) do
-      TEST_OPTIONS.merge(max_pool_size: 5, min_pool_size: 3, max_idle_time: 0.5)
-    end
-
     let(:server) do
       Mongo::Server.new(address, authorized_client.cluster, monitoring, listeners, options)
     end
@@ -246,40 +253,97 @@ describe Mongo::Server::ConnectionPool do
       pool.instance_variable_get(:@queue).queue
     end
 
-    context 'when the sockets have not been checked out' do
+    context 'when there is a max_idle_time specified' do
 
-      before do
-        sleep(0.5)
-        pool.close_stale_sockets!
+      let(:options) do
+        TEST_OPTIONS.merge(max_pool_size: 2, max_idle_time: 0.5)
       end
 
-      it 'does not close any sockets' do
-        expect(queue.all? { |c| c.connected? }).to be(true)
-      end
-    end
-
-    context 'when a socket is checkout out' do
-
-      context 'when the max_idle_time is reached' do
-
-        let!(:connection) do
-          c = pool.checkout
-          pool.checkin(c)
-          c
-        end
+      context 'when the connections have not been checked out' do
 
         before do
+          queue.each do |conn|
+            expect(conn).not_to receive(:disconnect!)
+          end
           sleep(0.5)
           pool.close_stale_sockets!
         end
 
-        it 'closes the stale socket' do
-          expect(connection).not_to be_connected
+        it 'does not close any sockets' do
+          expect(queue.none? { |c| c.connected? }).to be(true)
+        end
+      end
+
+      context 'when the sockets have already been checked out and returned to the pool' do
+
+        context 'when min size is 0' do
+
+          let(:options) do
+            TEST_OPTIONS.merge(max_pool_size: 2, min_pool_size: 0, max_idle_time: 0.5)
+          end
+
+          before do
+            queue.each do |conn|
+              expect(conn).to receive(:disconnect!).and_call_original
+            end
+            pool.checkin(pool.checkout)
+            pool.checkin(pool.checkout)
+            sleep(0.5)
+            pool.close_stale_sockets!
+          end
+
+          it 'closes all stale sockets' do
+            expect(queue.all? { |c| !c.connected? }).to be(true)
+          end
         end
 
-        it 'does not close the other sockets' do
-          expect(queue[1..-1].all? { |c| c.connected? }).to be(true)
+        context 'when min size is > 0' do
+
+          let(:options) do
+            TEST_OPTIONS.merge(max_pool_size: 2, min_pool_size: 1, max_idle_time: 0.5)
+          end
+
+          before do
+            first = pool.checkout
+            second = pool.checkout
+
+            first.connect!
+            second.connect!
+
+            pool.checkin(second)
+            pool.checkin(first)
+
+            expect(second).to receive(:disconnect!).and_call_original
+            expect(first).not_to receive(:disconnect!)
+
+            sleep(0.5)
+            pool.close_stale_sockets!
+          end
+
+          it 'closes all stale sockets' do
+            expect(queue[0].connected?).to be(true)
+            expect(queue[1].connected?).to be(false)
+          end
         end
+      end
+    end
+
+    context 'when there is no max_idle_time specified' do
+
+      let(:connection) do
+        conn = pool.checkout
+        conn.connect!
+        pool.checkin(conn)
+        conn
+      end
+
+      before do
+        expect(connection).not_to receive(:disconnect!)
+        pool.close_stale_sockets!
+      end
+
+      it 'does not close any sockets' do
+        expect(connection.connected?).to be(true)
       end
     end
   end
