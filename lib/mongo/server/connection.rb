@@ -39,6 +39,9 @@ module Mongo
       # @since 2.1.0
       PING_BYTES = PING_MESSAGE.serialize.to_s.freeze
 
+      # The last time the connection was checked back into a pool.
+      #
+      # @since 2.5.0
       attr_reader :last_checkin
 
       def_delegators :@server,
