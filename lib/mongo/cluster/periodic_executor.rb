@@ -13,16 +13,22 @@
 # limitations under the License.
 
 module Mongo
+
   class Cluster
 
+    # An manager that calls #execute on its executors at a regular interval.
+    #
+    # @api private
+    #
+    # @since 2.5.0
     class PeriodicExecutor
 
-      # The default time interval for the reaper executor to execute.
+      # The default time interval for the periodic executor to execute.
       #
       # @since 2.5.0
       FREQUENCY = 1.freeze
 
-      # Create a reaper executor.
+      # Create a periodic executor.
       #
       # @example Create a PeriodicExecutor.
       #   Mongo::Cluster::PeriodicExecutor.new(reaper, reaper2)
@@ -37,7 +43,7 @@ module Mongo
 
       # Start the thread.
       #
-      # @example Start the reaper executor's thread.
+      # @example Start the periodic executor's thread.
       #   periodic_executor.run!
       #
       # @api private
@@ -62,14 +68,14 @@ module Mongo
 
       # Trigger an execute call on each reaper.
       #
-      # @example Execute all reapers.
+      # @example Trigger all reapers.
       #   periodic_executor.execute
       #
       # @api private
       #
       # @since 2.5.0
       def execute
-        @executors.each { |executor| executor.execute }
+        @executors.each { |executor| executor.execute } and true
       end
 
       private

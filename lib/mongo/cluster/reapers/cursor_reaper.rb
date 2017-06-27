@@ -15,10 +15,13 @@
 require 'set'
 
 module Mongo
+
   class Cluster
 
     # A manager that sends kill cursors operations at regular intervals to close
     # cursors that have been garbage collected without being exhausted.
+    #
+    # @api private
     #
     # @since 2.3.0
     class CursorReaper
