@@ -45,21 +45,7 @@ module Mongo
         @to_kill = {}
         @active_cursors = Set.new
         @mutex = Mutex.new
-        @thread = nil
       end
-
-      # Start the cursor reaper's thread.
-      #
-      # @example Start the cursor reaper's thread.
-      #   reaper.run!
-      #
-      # @api private
-      #
-      # @since 2.3.0
-      def run!
-        @thread && @thread.alive? ? @thread : start!
-      end
-      alias :restart! :run!
 
       # Schedule a kill cursors operation to be eventually executed.
       #
@@ -116,18 +102,6 @@ module Mongo
         end
       end
 
-      # Stop the cursor reaper's thread.
-      #
-      # @example Stop the cursor reaper's thread.
-      #   reaper.stop!
-      #
-      # @api private
-      #
-      # @since 2.3.0
-      def stop!
-        @thread.kill && @thread.stop?
-      end
-
       # Execute all pending kill cursors operations.
       #
       # @example Execute pending kill cursors operations.
@@ -163,17 +137,6 @@ module Mongo
         end
       end
       alias :execute :kill_cursors
-
-      private
-
-      def start!
-        @thread = Thread.new(FREQUENCY) do |i|
-          loop do
-            sleep(i)
-            kill_cursors
-          end
-        end
-      end
     end
   end
 end

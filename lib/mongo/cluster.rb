@@ -200,8 +200,8 @@ module Mongo
     # @since 2.2.0
     def self.finalize(pools, periodic_executor)
       proc do
-        begin; periodic_executor.execute; rescue; end
         periodic_executor.stop!
+        begin; periodic_executor.execute; rescue; end
         pools.values.each do |pool|
           pool.disconnect!
         end
@@ -363,8 +363,8 @@ module Mongo
     #
     # @since 2.1.0
     def disconnect!
-      begin; @periodic_executor.execute; rescue; end
       @periodic_executor.stop!
+      begin; @periodic_executor.execute; rescue; end
       @servers.each { |server| server.disconnect! } and true
     end
 
