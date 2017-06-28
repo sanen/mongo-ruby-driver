@@ -158,8 +158,8 @@ module Mongo
     # @option options [ Integer ] :server_selection_timeout The timeout in seconds
     #   for selecting a server for an operation.
     # @option options [ String ] :password The user's password.
-    # @option options [ Integer ] :max_idle_time The maximum seconds a socket can remain
-    #   idle in the connection pool after it has been checked out and checked back in.
+    # @option options [ Integer ] :max_idle_time The maximum seconds a socket can remain idle
+    #   since it has been checked in to the pool.
     # @option options [ Integer ] :max_pool_size The maximum size of the
     #   connection pool.
     # @option options [ Integer ] :min_pool_size The minimum size of the

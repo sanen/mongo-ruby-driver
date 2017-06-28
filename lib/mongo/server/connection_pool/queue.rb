@@ -164,8 +164,7 @@ module Mongo
           @wait_timeout ||= options[:wait_queue_timeout] || WAIT_TIMEOUT
         end
 
-        # The maximum seconds a socket can remain idle in the connection pool after it
-        #   has been checked out and checked back in.
+        # The maximum seconds a socket can remain idle since it has been checked in to the pool.
         #
         # @example Get the max idle time.
         #   queue.max_idle_time
