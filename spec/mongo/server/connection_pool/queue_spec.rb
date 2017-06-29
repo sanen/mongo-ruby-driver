@@ -55,7 +55,7 @@ describe Mongo::Server::ConnectionPool::Queue do
     end
 
     let(:queue) do
-      described_class.new(:max_pool_size => 1, :min_pool_size => 1) { connection }
+      described_class.new(:max_pool_size => 1) { connection }
     end
 
     it 'disconnects all connections in the queue' do

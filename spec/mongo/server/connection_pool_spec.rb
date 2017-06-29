@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Mongo::Server::ConnectionPool do
 
   let(:options) do
-    TEST_OPTIONS.merge(max_pool_size: 2, min_pool_size: 1)
+    TEST_OPTIONS.merge(max_pool_size: 2)
   end
 
   let(:address) do
@@ -228,7 +228,7 @@ describe Mongo::Server::ConnectionPool do
     before do
      t = Thread.new {
         # Kill the thread when it's authenticating
-        allow(Mongo::Auth).to receive(:get) { t.kill }
+        allow(Mongo::Auth).to receive(:get) { t.kill and true }
         pool.with_connection { |c| c.send(:ensure_connected) { |socket| socket } }
       }
       t.join
