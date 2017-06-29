@@ -299,33 +299,104 @@ describe Mongo::Server::ConnectionPool do
 
         context 'when min size is > 0' do
 
-          let(:options) do
-            TEST_OPTIONS.merge(max_pool_size: 2, min_pool_size: 1, max_idle_time: 0.5)
+          context 'when more than the number of min_size are checked out' do
+
+            let(:options) do
+              TEST_OPTIONS.merge(max_pool_size: 5, min_pool_size: 3, max_idle_time: 0.5)
+            end
+
+            before do
+              first = pool.checkout
+              second = pool.checkout
+              third = pool.checkout
+              fourth = pool.checkout
+              fifth = pool.checkout
+
+              pool.checkin(fifth)
+
+              expect(fifth).to receive(:disconnect!).and_call_original
+              expect(fifth).not_to receive(:connect!)
+
+              sleep(0.5)
+              pool.close_stale_sockets!
+            end
+
+            it 'closes all stale sockets and does no connect new ones' do
+              expect(queue.size).to be(1)
+              expect(queue[0].connected?).to be(false)
+            end
           end
 
-          before do
-            first = pool.checkout
-            second = pool.checkout
+          context 'when between 0 and min_size number of connections are checked out' do
 
-            first.connect!
-            second.connect!
+            let(:options) do
+              TEST_OPTIONS.merge(max_pool_size: 5, min_pool_size: 3, max_idle_time: 0.5)
+            end
 
-            pool.checkin(second)
-            pool.checkin(first)
+            before do
+              first = pool.checkout
+              second = pool.checkout
+              third = pool.checkout
+              fourth = pool.checkout
+              fifth = pool.checkout
 
-            expect(second).to receive(:disconnect!).and_call_original
-            expect(first).to receive(:disconnect!).and_call_original
+              pool.checkin(third)
+              pool.checkin(fourth)
+              pool.checkin(fifth)
 
-            expect(second).not_to receive(:connect!)
-            expect(first).to receive(:connect!).and_call_original
 
-            sleep(0.5)
-            pool.close_stale_sockets!
+              expect(third).to receive(:disconnect!).and_call_original
+              expect(third).not_to receive(:connect!)
+
+              expect(fourth).to receive(:disconnect!).and_call_original
+              expect(fourth).not_to receive(:connect!)
+
+              expect(fifth).to receive(:disconnect!).and_call_original
+              expect(fifth).to receive(:connect!).and_call_original
+
+              sleep(0.5)
+              pool.close_stale_sockets!
+            end
+
+            it 'closes all stale sockets and does no connect new ones' do
+              expect(queue.size).to be(3)
+              expect(queue[0].connected?).to be(true)
+              expect(queue[1].connected?).to be(false)
+              expect(queue[2].connected?).to be(false)
+            end
           end
 
-          it 'closes all stale sockets' do
-            expect(queue[0].connected?).to be(true)
-            expect(queue[1].connected?).to be(false)
+          context 'when exactly the min_size number of connections are checked out' do
+
+            let(:options) do
+              TEST_OPTIONS.merge(max_pool_size: 5, min_pool_size: 3, max_idle_time: 0.5)
+            end
+
+            before do
+              first = pool.checkout
+              second = pool.checkout
+              third = pool.checkout
+              fourth = pool.checkout
+              fifth = pool.checkout
+
+              pool.checkin(fourth)
+              pool.checkin(fifth)
+
+              expect(fourth).to receive(:disconnect!).and_call_original
+              expect(fourth).not_to receive(:connect!)
+
+              expect(fifth).to receive(:disconnect!).and_call_original
+              expect(fifth).not_to receive(:connect!)
+
+              sleep(0.5)
+              pool.close_stale_sockets!
+            end
+
+            it 'closes all stale sockets and does no connect new ones' do
+              expect(queue.size).to be(2)
+              expect(queue[0].connected?).to be(false)
+              expect(queue[1].connected?).to be(false)
+            end
           end
         end
       end
