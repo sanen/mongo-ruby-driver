@@ -437,12 +437,15 @@ describe Mongo::Server::Connection do
 
       it 'raises a timeout when it expires' do
         start = Time.now
-        expect {
+        begin
           Timeout::timeout(3) do
             client[authorized_collection.name].find("$where" => "sleep(2000) || true").first
           end
-        }.to raise_exception(Timeout::Error, "Took more than 1.5 seconds to receive data.")
-        end_time = Time.now
+        rescue => ex
+          end_time = Time.now
+          expect(ex).to be_a(Timeout::Error)
+          expect(ex.message).to eq("Took more than 1.5 seconds to receive data.")
+        end
         expect(end_time - start).to be_within(0.2).of(1.5)
       end
 
