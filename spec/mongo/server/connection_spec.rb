@@ -446,7 +446,7 @@ describe Mongo::Server::Connection do
           expect(ex).to be_a(Timeout::Error)
           expect(ex.message).to eq("Took more than 1.5 seconds to receive data.")
         end
-        expect(end_time - start).to be_within(0.2).of(1.5)
+        expect(end_time - start).to be_within(0.4).of(1.5)
       end
 
       context 'when the socket_timeout is negative' do
