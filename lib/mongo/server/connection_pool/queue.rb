@@ -186,11 +186,13 @@ module Mongo
         def close_stale_sockets!
           if max_idle_time
             mutex.synchronize do
+              num_checked_out = @connections - queue.size
+              min_size_delta = [(min_size - num_checked_out), 0].max
               queue.reverse_each do |connection|
                 if last_checkin = connection.last_checkin
                   if (Time.now - last_checkin) > max_idle_time
                     connection.disconnect!
-                    if queue.index(connection) < min_size
+                    if queue.index(connection) < min_size_delta
                       connection.connect!
                     end
                   end
