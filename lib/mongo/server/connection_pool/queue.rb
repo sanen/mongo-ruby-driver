@@ -188,9 +188,13 @@ module Mongo
             mutex.synchronize do
               queue.reverse_each do |connection|
                 if last_checkin = connection.last_checkin
-                  connection.disconnect! if (Time.now - last_checkin) > max_idle_time
+                  if (Time.now - last_checkin) > max_idle_time
+                    connection.disconnect!
+                    if queue.index(connection) < min_size
+                      connection.connect!
+                    end
+                  end
                 end
-                break if queue.index(connection) == min_size
               end
             end
           end

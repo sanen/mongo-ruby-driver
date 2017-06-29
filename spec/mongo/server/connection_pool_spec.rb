@@ -314,7 +314,10 @@ describe Mongo::Server::ConnectionPool do
             pool.checkin(first)
 
             expect(second).to receive(:disconnect!).and_call_original
-            expect(first).not_to receive(:disconnect!)
+            expect(first).to receive(:disconnect!).and_call_original
+
+            expect(second).not_to receive(:connect!)
+            expect(first).to receive(:connect!).and_call_original
 
             sleep(0.5)
             pool.close_stale_sockets!

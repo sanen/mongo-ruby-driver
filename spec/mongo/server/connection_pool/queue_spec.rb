@@ -211,11 +211,12 @@ describe Mongo::Server::ConnectionPool::Queue do
 
     before do
       queue.enqueue(connection)
+      expect(connection).to receive(:connect!)
       sleep(0.5)
       queue.close_stale_sockets!
     end
 
-    it 'disconnects the expired connections' do
+    it 'disconnects and reconnects up to min_size the expired connections' do
       expect(queue.size).to eq(1)
     end
   end
