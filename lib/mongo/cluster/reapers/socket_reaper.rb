@@ -48,6 +48,12 @@ module Mongo
           server.pool.close_stale_sockets!
         end and true
       end
+
+      # When the socket reaper is garbage-collected, there's no need to close stale sockets;
+      #   sockets will be closed anyway when the pools are garbage-collected.
+      #
+      # @since 2.5.0
+      def finalize; end
     end
   end
 end

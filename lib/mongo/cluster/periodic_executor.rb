@@ -63,6 +63,7 @@ module Mongo
       #
       # @since 2.5.0
       def stop!
+        @executors.each { |executor| executor.finalize }
         @thread.kill && @thread.stop?
       end
 
