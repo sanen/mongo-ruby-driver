@@ -228,7 +228,7 @@ describe Mongo::Server::ConnectionPool do
     before do
      t = Thread.new {
         # Kill the thread when it's authenticating
-        allow(Mongo::Auth).to receive(:get) { t.kill and true }
+        allow(Mongo::Auth).to receive(:get) { t.kill and t.stop? }
         pool.with_connection { |c| c.send(:ensure_connected) { |socket| socket } }
       }
       t.join
