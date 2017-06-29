@@ -26,7 +26,7 @@ module Mongo
       # The default time interval for the periodic executor to execute.
       #
       # @since 2.5.0
-      FREQUENCY = 1.freeze
+      FREQUENCY = 5.freeze
 
       # Create a periodic executor.
       #
