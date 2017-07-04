@@ -211,7 +211,7 @@ describe Mongo::Server::ConnectionPool::Queue do
 
     before do
       queue.enqueue(connection)
-      expect(connection).to receive(:connect!)
+      expect(connection).to receive(:connect!).and_return(true)
       sleep(0.5)
       queue.close_stale_sockets!
     end
