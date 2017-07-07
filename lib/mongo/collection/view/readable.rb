@@ -48,6 +48,21 @@ module Mongo
           Aggregation.new(self, pipeline, options)
         end
 
+        # Get the changes on a collection or database.
+        #
+        # @example Get change notifications documents.
+        #   view.changes([{ '$match' => { operationType: { '$in' => ['insert', 'replace'] } } }])
+        #
+        # @param [ Array<Hash> ] pipeline Optional additional filter operators.
+        # @param [ Hash ] options The change stream options.
+        #
+        # @return [ ChangeStream ] The change stream object.
+        #
+        # @since 2.5.0
+        def changes(pipeline, options = {})
+          ChangeStream.new(self, pipeline, options)
+        end
+
         # Allows the query to get partial results if some shards are down.
         #
         # @example Allow partial results.

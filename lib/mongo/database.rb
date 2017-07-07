@@ -233,6 +233,31 @@ module Mongo
       Auth::User::View.new(self)
     end
 
+    # As of version 3.6 of the server, a ``$changeNotification`` pipeline stage is supported
+    # in the aggregation framework. This stage allows users to request that notifications are returned for
+    # all changes to a particular collection or database.
+    #
+    # @example Get change notifications for a given collection.
+    #   collection.changes([{ '$match' => { operationType: { '$in' => ['insert', 'replace'] } } }])
+    #
+    # @param [ Array<Hash> ] pipeline Optional additional filter operators.
+    # @param [ Hash ] options The change stream options.
+    #
+    # @option options [ String ] :full_document Specify level of detail on document changes to include in responses.
+    # @option options [ Integer ] :max_await_time_ms The maximum amount of time for the server to wait on new documents
+    #   to satisfy a change stream query.
+    # @option options [ BSON::Document, Hash ] :resume_after The logical starting point for the new change stream.
+    # @option options [ true, false ] :disable_resume Whether to explicitly opt out of resumability.
+    # @option options [ Integer ] :batch_size The number of documents to return per batch.
+    # @option options [ Hash ] :collation The collation to use.
+    #
+    # @return [ ChangeStream ] The change stream object.
+    #
+    # @since 2.5.0
+    def changes(pipeline = [], options = {})
+      Collection.new(self, 1).changes(pipeline, options)
+    end
+
     # Create a database for the provided client, for use when we don't want the
     # client's original database instance to be the same.
     #

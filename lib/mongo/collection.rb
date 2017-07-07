@@ -269,6 +269,31 @@ module Mongo
       View.new(self, {}).aggregate(pipeline, options)
     end
 
+    # As of version 3.6 of the MongoDB server, a ``$changeNotification`` pipeline stage is supported
+    # in the aggregation framework. This stage allows users to request that notifications are sent for
+    # all changes to a particular collection or database.
+    #
+    # @example Get change notifications for a given collection.
+    #   collection.changes([{ '$match' => { operationType: { '$in' => ['insert', 'replace'] } } }])
+    #
+    # @param [ Array<Hash> ] pipeline Optional additional filter operators.
+    # @param [ Hash ] options The change stream options.
+    #
+    # @option options [ String ] :full_document Specify level of detail on document changes to include in responses.
+    # @option options [ Integer ] :max_await_time_ms The maximum amount of time for the server to wait on new documents
+    #   to satisfy a change stream query.
+    # @option options [ BSON::Document, Hash ] :resume_after The logical starting point for the new change stream.
+    # @option options [ true, false ] :disable_resume Whether to explicitly opt out of resumability.
+    # @option options [ Integer ] :batch_size The number of documents to return per batch.
+    # @option options [ Hash ] :collation The collation to use.
+    #
+    # @return [ ChangeStream ] The change stream object.
+    #
+    # @since 2.5.0
+    def changes(pipeline = [], options = {})
+      View.new(self, {}).changes(pipeline, options)
+    end
+
     # Get a count of matching documents in the collection.
     #
     # @example Get the count.

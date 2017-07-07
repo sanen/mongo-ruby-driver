@@ -29,6 +29,7 @@ module Mongo
           MAPPINGS = BSON::Document.new(
             :allow_disk_use => 'allowDiskUse',
             :max_time_ms => 'maxTimeMS',
+            :max_await_time_ms => 'maxAwaitTimeMS',
             :explain => 'explain',
             :bypass_document_validation => 'bypassDocumentValidation',
             :collation => 'collation',
