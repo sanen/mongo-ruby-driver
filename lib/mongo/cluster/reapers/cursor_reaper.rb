@@ -137,7 +137,7 @@ module Mongo
         end
       end
       alias :execute :kill_cursors
-      alias :finalize :kill_cursors
+      alias :flush :kill_cursors
     end
   end
 end

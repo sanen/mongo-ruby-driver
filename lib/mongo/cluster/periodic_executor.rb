@@ -63,7 +63,6 @@ module Mongo
       #
       # @since 2.5.0
       def stop!
-        @executors.each { |executor| executor.finalize }
         @thread.kill && @thread.stop?
       end
 
@@ -77,6 +76,18 @@ module Mongo
       # @since 2.5.0
       def execute
         @executors.each { |executor| executor.execute } and true
+      end
+
+      # Execute all pending operations.
+      #
+      # @example Execute all pending operations.
+      #   periodic_executor.flush
+      #
+      # @api private
+      #
+      # @since 2.5.0
+      def flush
+        @executors.each { |executor| executor.flush }
       end
 
       private

@@ -53,7 +53,7 @@ module Mongo
       #   sockets will be closed anyway when the pools are garbage-collected.
       #
       # @since 2.5.0
-      def finalize; end
+      def flush; end
     end
   end
 end

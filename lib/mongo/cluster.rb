@@ -201,7 +201,7 @@ module Mongo
     def self.finalize(pools, periodic_executor)
       proc do
         periodic_executor.stop!
-        begin; periodic_executor.execute; rescue; end
+        begin; periodic_executor.flush; rescue; end
         pools.values.each do |pool|
           pool.disconnect!
         end
