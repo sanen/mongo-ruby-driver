@@ -204,7 +204,8 @@ module Mongo
             end
           end
 
-          to_connect.select(&:connect!).each do |connection|
+          to_connect.each do |connection|
+            begin; connection.connect!; rescue; end
             enqueue(connection)
           end
         end
