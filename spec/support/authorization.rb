@@ -82,7 +82,7 @@ BASE_OPTIONS = {
                   max_read_retries: 5,
                   wait_queue_timeout: 2,
                   connect_timeout: 3,
-                  max_idle_time: 2
+                  max_idle_time: 5
                }
 
 # Options for test suite clients.

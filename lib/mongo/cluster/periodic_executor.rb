@@ -26,7 +26,7 @@ module Mongo
       # The default time interval for the periodic executor to execute.
       #
       # @since 2.5.0
-      FREQUENCY = 5.freeze
+      FREQUENCY = 5
 
       # Create a periodic executor.
       #
@@ -63,6 +63,7 @@ module Mongo
       #
       # @since 2.5.0
       def stop!
+        begin; flush; rescue; end
         @thread.kill && @thread.stop?
       end
 
@@ -87,7 +88,7 @@ module Mongo
       #
       # @since 2.5.0
       def flush
-        @executors.each { |executor| executor.flush }
+        @executors.each { |executor| executor.flush } and true
       end
 
       private

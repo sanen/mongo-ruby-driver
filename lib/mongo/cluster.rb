@@ -201,7 +201,6 @@ module Mongo
     def self.finalize(pools, periodic_executor)
       proc do
         periodic_executor.stop!
-        begin; periodic_executor.flush; rescue; end
         pools.values.each do |pool|
           pool.disconnect!
         end
@@ -364,7 +363,6 @@ module Mongo
     # @since 2.1.0
     def disconnect!
       @periodic_executor.stop!
-      begin; @periodic_executor.execute; rescue; end
       @servers.each { |server| server.disconnect! } and true
     end
 
