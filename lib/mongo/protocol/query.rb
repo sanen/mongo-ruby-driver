@@ -67,7 +67,7 @@ module Mongo
         @skip = options[:skip]  || 0
         @flags = options[:flags] || []
         @upconverter = Upconverter.new(collection, selector, options, flags)
-        @compression_allowed = !(selector.keys & Monitoring::Event::Secure::REDACTED_COMMANDS).empty?
+        @compression_allowed = (selector.keys & Monitoring::Event::Secure::REDACTED_COMMANDS).empty?
         super
       end
 
@@ -101,7 +101,7 @@ module Mongo
       end
 
       def compress!(compressor)
-        @compression_allowed ? self : self
+        @compression_allowed ? Compressed.new(self, compressor) : self
       end
 
       protected

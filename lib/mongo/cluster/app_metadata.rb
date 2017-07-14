@@ -102,8 +102,8 @@ module Mongo
           end
         end
         document = Server::Monitor::Connection::ISMASTER
-        document = document.merge(client: client_document) if client_document
-        document = document.merge!(compression: @compressors)
+        document = document.merge(compression: @compressors)
+        document[:client] = client_document
         Protocol::Query.new(Database::ADMIN, Database::COMMAND, document, :limit => -1).serialize
       end
 

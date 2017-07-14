@@ -184,6 +184,29 @@ module Mongo
           true
         end
       end
+
+      module Byte
+
+        def self.serialize(buffer, value, validating_keys = BSON::Config.validating_keys?)
+          buffer.put_byte(value)
+        end
+
+        def self.deserialize(buffer)
+          buffer.get_byte
+        end
+      end
+
+      module Bytes
+
+        def self.serialize(buffer, value, validating_keys = BSON::Config.validating_keys?)
+          buffer.put_bytes(value)
+        end
+
+        def self.deserialize(buffer)
+          # @todo: buffer.length should not be used
+          buffer.get_bytes(buffer.length)
+        end
+      end
     end
   end
 end

@@ -111,6 +111,10 @@ module Mongo
 
       alias_method :to_s, :serialize
 
+      def inflate!
+        self
+      end
+
       # Deserializes messages from an IO stream
       #
       # @param [ Integer ] max_message_size The max message size.
@@ -142,7 +146,7 @@ module Mongo
             deserialize_field(message, buffer, field)
           end
         end
-        message
+        message.inflate!
       end
 
       # Tests for equality between two wire protocol messages
