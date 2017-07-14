@@ -38,6 +38,7 @@ module Mongo
       :auth_source,
       :connect,
       :connect_timeout,
+      :compressors,
       :database,
       :heartbeat_frequency,
       :id_generator,
@@ -69,8 +70,11 @@ module Mongo
       :truncate_logs,
       :user,
       :wait_queue_timeout,
-      :write
+      :write,
+      :zlib_compression_level
     ].freeze
+
+    VALID_COMPRESSORS = [ :zlib ].freeze
 
     # @return [ Mongo::Cluster ] cluster The cluster of servers for the client.
     attr_reader :cluster
@@ -165,6 +169,8 @@ module Mongo
     #   seconds, in the connection pool for a connection to be checked in.
     # @option options [ Float ] :connect_timeout The timeout, in seconds, to
     #   attempt a connection.
+    # @option options [ Array<Symbol> ] :compressors The compressor to use. Currently the driver
+    #   only supports zlib.
     # @option options [ Hash ] :read The read preference options. They consist of a
     #   mode specified as a symbol, an array of hashes known as tag_sets,
     #   and local_threshold.
@@ -398,14 +404,23 @@ module Mongo
 
     def validate_options!(opts = Options::Redacted.new)
       return Options::Redacted.new unless opts
-      Options::Redacted.new(opts.select do |o|
-        if VALID_OPTIONS.include?(o.to_sym)
-          validate_max_min_pool_size!(o.to_sym, opts) and true
+      Options::Redacted.new(opts.select do |k, v|
+        key = k.to_sym
+        if VALID_OPTIONS.include?(key)
+          validate_compressor(key, v)
+          validate_max_min_pool_size!(key, opts)
         else
-          log_warn("Unsupported client option '#{o}'. It will be ignored.")
+          log_warn("Unsupported client option '#{k}'. It will be ignored.")
           false
         end
       end)
+    end
+
+    def validate_compressor(key, value)
+      return unless key == :compressors
+      unless VALID_COMPRESSORS.include?(value.to_sym)
+        log_warn("Unsupported compressor '#{value}'. Compression will not be used.")
+      end
     end
 
     def validate_max_min_pool_size!(option, opts)
