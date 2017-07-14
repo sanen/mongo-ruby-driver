@@ -45,6 +45,8 @@ module Mongo
         # @deprecated Please use Server::CONNECT_TIMEOUT instead. Will be removed in 3.0.0
         CONNECT_TIMEOUT = 10.freeze
 
+        attr_reader :compressor
+
         # Send the preserialized ismaster call.
         #
         # @example Send a preserialized ismaster message.
@@ -122,6 +124,7 @@ module Mongo
           @ssl_options = options.reject { |k, v| !k.to_s.start_with?(SSL) }
           @socket = nil
           @pid = Process.pid
+          @compressor = nil
         end
 
         # Get the socket timeout.
@@ -142,10 +145,16 @@ module Mongo
 
         private
 
+        def set_compressor!(reply)
+          # use options and reply to get compressor
+          @compressor = nil
+        end
+
         def handshake!
           if @app_metadata
             socket.write(@app_metadata.ismaster_bytes)
-            Protocol::Reply.deserialize(socket, Mongo::Protocol::Message::MAX_MESSAGE_SIZE).documents[0]
+            reply = Protocol::Reply.deserialize(socket, Mongo::Protocol::Message::MAX_MESSAGE_SIZE).documents[0]
+            set_compressor!(reply)
           end
         end
       end

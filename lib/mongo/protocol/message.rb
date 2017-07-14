@@ -94,6 +94,10 @@ module Mongo
         false
       end
 
+      def compress!(compressor)
+        self
+      end
+
       # Serializes message into bytes that can be sent on the wire
       #
       # @param buffer [String] buffer where the message should be inserted
