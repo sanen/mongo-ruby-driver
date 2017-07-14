@@ -54,6 +54,7 @@ module Mongo
       def initialize(cluster)
         @app_name = cluster.options[:app_name]
         @platform = cluster.options[:platform]
+        @compressors = cluster.options[:compressors] || []
       end
 
       # Get the bytes of the ismaster message including this metadata.
@@ -102,6 +103,7 @@ module Mongo
         end
         document = Server::Monitor::Connection::ISMASTER
         document = document.merge(client: client_document) if client_document
+        document = document.merge!(compression: @compressors)
         Protocol::Query.new(Database::ADMIN, Database::COMMAND, document, :limit => -1).serialize
       end
 

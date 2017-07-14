@@ -407,8 +407,7 @@ module Mongo
       Options::Redacted.new(opts.select do |k, v|
         key = k.to_sym
         if VALID_OPTIONS.include?(key)
-          validate_compressor(key, v)
-          validate_max_min_pool_size!(key, opts)
+          valid_compressors?(key, v) && validate_max_min_pool_size!(key, opts)
         else
           log_warn("Unsupported client option '#{k}'. It will be ignored.")
           false
@@ -416,10 +415,16 @@ module Mongo
       end)
     end
 
-    def validate_compressor(key, value)
-      return unless key == :compressors
-      unless VALID_COMPRESSORS.include?(value.to_sym)
-        log_warn("Unsupported compressor '#{value}'. Compression will not be used.")
+    def valid_compressors?(key, compressors)
+      return true unless key == :compressors
+
+      compressors.all? do |compressor|
+        if !VALID_COMPRESSORS.include?(compressor.to_sym)
+          log_warn("Unsupported compressor in list '#{compressors}'. Compression will not be used.")
+          false
+        else
+          true
+        end
       end
     end
 

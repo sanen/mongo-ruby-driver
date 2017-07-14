@@ -146,8 +146,9 @@ module Mongo
         private
 
         def set_compressor!(reply)
-          # use options and reply to get compressor
-          @compressor = nil
+          if intersection = (reply['compression'] & options['compressors'])
+            @compressor = intersection[0]
+          end
         end
 
         def handshake!
