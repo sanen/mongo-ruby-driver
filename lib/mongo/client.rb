@@ -74,6 +74,9 @@ module Mongo
       :zlib_compression_level
     ].freeze
 
+    # The compression algorithms supported by the driver.
+    #
+    # @since 2.5.0
     VALID_COMPRESSORS = [ Mongo::Protocol::Compressed::ZLIB ].freeze
 
     # @return [ Mongo::Cluster ] cluster The cluster of servers for the client.
@@ -169,7 +172,7 @@ module Mongo
     #   seconds, in the connection pool for a connection to be checked in.
     # @option options [ Float ] :connect_timeout The timeout, in seconds, to
     #   attempt a connection.
-    # @option options [ Array<Symbol> ] :compressors The compressor to use. Currently the driver
+    # @option options [ Array<String> ] :compressors The compressor to use. Currently the driver
     #   only supports zlib.
     # @option options [ Hash ] :read The read preference options. They consist of a
     #   mode specified as a symbol, an array of hashes known as tag_sets,
