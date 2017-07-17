@@ -45,6 +45,9 @@ module Mongo
         # @deprecated Please use Server::CONNECT_TIMEOUT instead. Will be removed in 3.0.0
         CONNECT_TIMEOUT = 10.freeze
 
+        # The compressor is determined during the handshake.
+        #
+        # @since 2.5.0
         attr_reader :compressor
 
         # Send the preserialized ismaster call.
@@ -156,6 +159,7 @@ module Mongo
             socket.write(@app_metadata.ismaster_bytes)
             reply = Protocol::Reply.deserialize(socket, Mongo::Protocol::Message::MAX_MESSAGE_SIZE).documents[0]
             set_compressor!(reply)
+            reply
           end
         end
       end

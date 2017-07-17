@@ -22,26 +22,32 @@ module Mongo
     # This is a bi-directional message that compresses another opcode.
     #
     # @api semipublic
+    #
+    # @since 2.5.0
     class Compressed < Message
 
-      ZLIB = 2.chr.force_encoding(BSON::BINARY).freeze
+      ZLIB_BYTE = 2.chr.force_encoding(BSON::BINARY).freeze
+
+      ZLIB = 'zlib'.freeze
 
       COMPRESSOR_ID_MAP = {
-                            :zlib => ZLIB
+                            ZLIB => ZLIB_BYTE
                           }.freeze
 
       # Creates a new OP_COMPRESSED message
       #
-      # @example Kill the cursor on the server with id 1.
+      # @example Create an OP_COMPRESSED message.
       #   Compressed.new(original_message, 'zlib')
       #
       # @param [ Mongo::Protocol::Message ] message The original message.
       # @param [ String, Symbol ] compressor The compression algorithm to use.
+      #
+      # @since 2.5.0
       def initialize(message, compressor)
         @original_message = message
         @original_op_code = message.op_code
         @uncompressed_size = 0
-        @compressor_id = COMPRESSOR_ID_MAP[compressor.to_sym]
+        @compressor_id = COMPRESSOR_ID_MAP[compressor]
         @compressed_message = ''
         @request_id = message.set_request_id
         @upconverter = message.send(:upconverter)
@@ -66,11 +72,12 @@ module Mongo
       private
 
       # The operation code for a +Compressed+ message.
-      # @return [Fixnum] the operation code.
+      # @return [ Fixnum ] the operation code.
       #
       # @since 2.5.0
       OP_CODE = 2012
 
+      # @!attribute
       # Field representing the original message's op code as an Int32.
       field :original_op_code, Int32
 
@@ -79,13 +86,12 @@ module Mongo
       field :uncompressed_size, Int32
 
       # @!attribute
-      # @return [ String ] The id of the compressor used as a single byte.
+      # @return [ String ] The id of the compressor as a single byte.
       field :compressor_id, Byte
 
       # @!attribute
       # @return [ String ] The actual compressed message bytes.
       field :compressed_message, Bytes
-
 
       def serialize_fields(buffer, max_bson_size)
         buf = BSON::ByteBuffer.new

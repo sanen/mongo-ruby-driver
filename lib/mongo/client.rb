@@ -74,7 +74,7 @@ module Mongo
       :zlib_compression_level
     ].freeze
 
-    VALID_COMPRESSORS = [ :zlib ].freeze
+    VALID_COMPRESSORS = [ Mongo::Protocol::Compressed::ZLIB ].freeze
 
     # @return [ Mongo::Cluster ] cluster The cluster of servers for the client.
     attr_reader :cluster
@@ -419,7 +419,7 @@ module Mongo
       return true unless key == :compressors
 
       compressors.all? do |compressor|
-        if !VALID_COMPRESSORS.include?(compressor.to_sym)
+        if !VALID_COMPRESSORS.include?(compressor)
           log_warn("Unsupported compressor in list '#{compressors}'. Compression will not be used.")
           false
         else

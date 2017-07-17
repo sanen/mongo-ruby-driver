@@ -203,7 +203,7 @@ module Mongo
         end
 
         def self.deserialize(buffer)
-          # @todo: buffer.length should not be used
+          # @todo: buffer.length should not be used, use a length variable instead
           buffer.get_bytes(buffer.length)
         end
       end
