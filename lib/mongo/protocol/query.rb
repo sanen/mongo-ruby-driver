@@ -29,6 +29,7 @@ module Mongo
     #
     # @api semipublic
     class Query < Message
+      include Monitoring::Event::Secure
 
       # Creates a new Query message
       #
@@ -67,7 +68,7 @@ module Mongo
         @skip = options[:skip]  || 0
         @flags = options[:flags] || []
         @upconverter = Upconverter.new(collection, selector, options, flags)
-        @compression_allowed = (selector.keys & Monitoring::Event::Secure::REDACTED_COMMANDS).empty?
+        @compression_allowed = compression_allowed?(selector)
         super
       end
 

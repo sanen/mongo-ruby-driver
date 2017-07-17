@@ -52,6 +52,20 @@ module Mongo
         def redacted(command_name, document)
           REDACTED_COMMANDS.include?(command_name.to_s) ? BSON::Document.new : document
         end
+
+        # Is compression allowed for a given command message.
+        #
+        # @example Determine if compression is allowed for a given command.
+        #   secure.redacted(command_name, document)
+        #
+        # @param [ BSON::Document ] selector The document.
+        #
+        # @return [ true, false ] Whether compression can be used.
+        #
+        # @since 2.5.0
+        def compression_allowed?(selector)
+          !REDACTED_COMMANDS.include?(selector.keys.collect(&:to_s))
+        end
       end
     end
   end
