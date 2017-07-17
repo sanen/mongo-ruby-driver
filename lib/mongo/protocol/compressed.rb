@@ -95,7 +95,7 @@ module Mongo
 
       def serialize_fields(buffer, max_bson_size)
         buf = BSON::ByteBuffer.new
-        @original_message.send(:serialize_fields, buf)
+        @original_message.send(:serialize_fields, buf, max_bson_size)
         @uncompressed_size = buf.length
         @compressed_message = Zlib::Deflate.deflate(buf.to_s).force_encoding(BSON::BINARY)
         super

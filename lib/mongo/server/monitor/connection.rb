@@ -149,7 +149,10 @@ module Mongo
         private
 
         def set_compressor!(reply)
-          if intersection = (reply['compression'] & options['compressors'])
+          server_compressors = reply['compression']
+          return unless (server_compressors && options['compressors'])
+
+          if intersection = (server_compressors & options['compressors'])
             @compressor = intersection[0]
           end
         end

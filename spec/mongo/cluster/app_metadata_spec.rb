@@ -96,7 +96,7 @@ describe Mongo::Cluster::AppMetadata do
         end
 
         it 'truncates the document to be just an ismaster command and the compressors' do
-          expect(app_metadata.ismaster_bytes.length).to eq(Mongo::Server::Monitor::Connection::ISMASTER_BYTES.length + 26)
+          expect(app_metadata.ismaster_bytes.length).to eq(Mongo::Server::Monitor::Connection::ISMASTER_BYTES.length + 38)
         end
       end
     end
