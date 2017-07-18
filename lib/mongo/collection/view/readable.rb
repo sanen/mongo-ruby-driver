@@ -59,7 +59,7 @@ module Mongo
         # @return [ ChangeStream ] The change stream object.
         #
         # @since 2.5.0
-        def changes(pipeline, options = {})
+        def watch(pipeline, options = {})
           ChangeStream.new(self, pipeline, options)
         end
 

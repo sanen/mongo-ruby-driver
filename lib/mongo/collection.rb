@@ -290,8 +290,8 @@ module Mongo
     # @return [ ChangeStream ] The change stream object.
     #
     # @since 2.5.0
-    def changes(pipeline = [], options = {})
-      View.new(self, {}).changes(pipeline, options)
+    def watch(pipeline = [], options = {})
+      View.new(self, {}).watch(pipeline, options)
     end
 
     # Get a count of matching documents in the collection.

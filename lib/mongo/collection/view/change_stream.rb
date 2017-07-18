@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'mongo/collection/view/change_stream/retryable'
+require 'mongo/collection/view/change_stream/cursor'
+
 module Mongo
   class Collection
     class View
@@ -22,6 +25,7 @@ module Mongo
       #
       # @since 2.5.0
       class ChangeStream < Aggregation
+        include Retryable
 
         # @return [ BSON::Document, Hash ] resume_token The resume token.
         attr_reader :resume_token
@@ -47,7 +51,24 @@ module Mongo
           @resume_token = options[:resume_after]
         end
 
+        def each
+          @cursor = nil
+          read_with_one_retry do
+            server = read.select_server(cluster, false)
+            result = send_initial_query(server)
+            @cursor = ChangeStream::Cursor.new(view, result, server)
+          end
+          @cursor.each do |doc|
+            yield doc
+          end if block_given?
+          @cursor.to_enum
+        end
+
         private
+
+        def close_cursor
+          @cursor.send(:kill_cursors)
+        end
 
         def full_pipeline
           change_doc = { fullDocument: ( @options[:full_document] || FULL_DOCUMENT_DEFAULT ) }

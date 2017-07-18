@@ -254,8 +254,8 @@ module Mongo
     # @return [ ChangeStream ] The change stream object.
     #
     # @since 2.5.0
-    def changes(pipeline = [], options = {})
-      Collection.new(self, 1).changes(pipeline, options)
+    def watch(pipeline = [], options = {})
+      Collection.new(self, 1).watch(pipeline, options)
     end
 
     # Create a database for the provided client, for use when we don't want the
