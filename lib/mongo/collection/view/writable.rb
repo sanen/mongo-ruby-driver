@@ -41,16 +41,13 @@ module Mongo
           cmd[:maxTimeMS] = max_time_ms if max_time_ms
           cmd[:writeConcern] = write_concern.options if write_concern
 
-          with_session do
-            write_with_retry do
-              server = next_primary
-              apply_collation!(cmd, server, opts)
+          with_session_write_retry(cmd) do |command, server|
+            apply_collation!(command, server, opts)
 
-              Operation::Commands::Command.new({
-                                                :selector => cmd,
-                                                :db_name => database.name
-                                               }).execute(server)
-            end
+            Operation::Commands::Command.new({
+                                              :selector => command,
+                                              :db_name => database.name
+                                             }).execute(server)
           end.first['value']
         end
 
@@ -110,16 +107,13 @@ module Mongo
           cmd[:bypassDocumentValidation] = !!opts[:bypass_document_validation]
           cmd[:writeConcern] = write_concern.options if write_concern
 
-          with_session do
-            write_with_retry do
-              server = next_primary
-              apply_collation!(cmd, server, opts)
+          value = with_session_write_retry(cmd) do |command, server|
+            apply_collation!(command, server, opts)
 
-              Operation::Commands::Command.new({
-                                                :selector => cmd,
-                                                :db_name => database.name
-                                               }).execute(server)
-            end
+            Operation::Commands::Command.new({
+                                                 :selector => command,
+                                                 :db_name => database.name
+                                             }).execute(server)
           end.first['value']
           value unless value.nil? || value.empty?
         end
@@ -218,18 +212,15 @@ module Mongo
         def remove(value, opts = {})
           delete_doc = { Operation::Q => filter, Operation::LIMIT => value }
 
-          with_session do
-            result = write_with_retry do
-              server = next_primary
-              apply_collation!(delete_doc, server, opts)
+          with_session_write_retry(delete_doc) do |command, server|
+            apply_collation!(command, server, opts)
 
-              Operation::Write::Delete.new(
-                :delete => delete_doc,
+            Operation::Write::Delete.new(
+                :delete => command,
                 :db_name => collection.database.name,
                 :coll_name => collection.name,
                 :write_concern => collection.write_concern
-              ).execute(server)
-            end
+            ).execute(server)
           end
         end
 
@@ -237,20 +228,18 @@ module Mongo
           update_doc = { Operation::Q => filter,
                          Operation::U => spec,
                          Operation::MULTI => multi,
-                         Operation::UPSERT => !!opts[:upsert] }
-          with_session do
-            write_with_retry do
-              server = next_primary
-              apply_collation!(update_doc, server, opts)
+                         Operation::UPSERT => !!opts[:upsert]}
 
-              Operation::Write::Update.new(
-                :update => update_doc,
+          with_session_write_retry(update_doc) do |command, server|
+            apply_collation!(command, server, opts)
+
+            Operation::Write::Update.new(
+                :update => command,
                 :db_name => collection.database.name,
                 :coll_name => collection.name,
                 :write_concern => collection.write_concern,
                 :bypass_document_validation => !!opts[:bypass_document_validation]
-              ).execute(server)
-            end
+            ).execute(server)
           end
         end
       end

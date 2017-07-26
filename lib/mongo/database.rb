@@ -62,6 +62,8 @@ module Mongo
     # @return [ Hash ] options The options.
     attr_reader :options
 
+    attr_reader :session
+
     # Get cluster, read preference, and write concern from client.
     def_delegators :@client,
                    :cluster,
@@ -173,11 +175,12 @@ module Mongo
     # @since 2.0.0
     def drop
       operation = { :dropDatabase => 1 }
-      Operation::Commands::DropDatabase.new({
-                                             selector: operation,
-                                             db_name: name,
-                                             write_concern: write_concern
-                                            }).execute(next_primary)
+      with_session_write_retry(operation) do |command, server|
+        Operation::Commands::DropDatabase.new(selector: command,
+                                              db_name: name,
+                                              write_concern: write_concern
+                                             ).execute(server)
+      end
     end
 
     # Instantiate a new database object.
@@ -251,6 +254,18 @@ module Mongo
     def self.create(client)
       database = Database.new(client, client.options[:database], client.options)
       client.instance_variable_set(:@database, database)
+    end
+
+    private
+
+    def with_session_write_retry(cmd)
+      if session
+        session.with_write_retry(cmd) do |command, server|
+          yield(command, server)
+        end
+      else
+        yield(cmd, next_primary)
+      end
     end
   end
 end

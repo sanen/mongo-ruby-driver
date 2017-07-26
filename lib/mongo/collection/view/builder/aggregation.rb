@@ -76,22 +76,24 @@ module Mongo
                     db_name: database.name,
                     read: read
                    }
+            spec[:selector].merge!(txnId: options[:txnNum]) if options[:txnNum]
+            spec[:selector].merge!(sessionId: options[:sessionId]) if options[:sessionId]
             write? ? spec.merge!(write_concern: write_concern) : spec
           end
-
-          private
 
           def write?
             pipeline.any? { |operator| operator[:$out] || operator['$out'] }
           end
 
           def aggregation_command
-            command = BSON::Document.new(:aggregate => collection.name, :pipeline => pipeline)
+            @aggregation_command ||= (command = BSON::Document.new(:aggregate => collection.name, :pipeline => pipeline)
             command[:cursor] = cursor if cursor
             command[:readConcern] = collection.read_concern if collection.read_concern
             command.merge!(Options::Mapper.transform_documents(options, MAPPINGS))
-            command
+            command)
           end
+
+          private
 
           def cursor
             if options[:use_cursor] == true || options[:use_cursor].nil?

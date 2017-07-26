@@ -60,7 +60,8 @@ module Mongo
                      :client,
                      :cluster,
                      :database,
-                     :read_preference
+                     :read_preference,
+                     :with_session_write_retry
 
       # Delegate to the cluster for the next primary.
       def_delegators :cluster, :next_primary
@@ -168,9 +169,13 @@ module Mongo
       private
 
       def with_session
-        result = yield
-        collection.session.send(:set_operation_time, result) if collection.session
-        result
+        if collection.session
+          collection.session.record_operation_time do
+            yield
+          end
+        else
+          yield
+        end
       end
 
       def initialize_copy(other)

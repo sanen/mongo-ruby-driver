@@ -46,6 +46,8 @@ module Mongo
             }.tap do |cmd|
               cmd.merge!(writeConcern: write_concern.options) if write_concern
               cmd.merge!(:bypassDocumentValidation => true) if bypass_document_validation
+              cmd.merge!(:sessionId => options[:sessionId]) if options[:sessionId]
+              cmd.merge!(:txnNum => options[:txnNum]) if options[:txnNum]
             end
           end
 

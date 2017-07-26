@@ -29,6 +29,7 @@ module Mongo
       @options = client.options.merge(options)
       @server_session = ServerSession.new(@client)
       @ended = false
+      @txn_num = -1
     end
 
     def end_session
@@ -46,12 +47,8 @@ module Mongo
       end
     end
 
-    def use
-      begin
-        yield
-      ensure
-        @server_session.update_last_use!
-      end
+    def record_operation_time
+      set_operation_time(yield)
     end
 
     def get_read_concern(collection)
@@ -62,7 +59,30 @@ module Mongo
       end
     end
 
+    def with_write_retry(command)
+      server = client.cluster.next_primary
+      return yield(command, server) unless retrying_writes?
+
+      command[:sessionId] = @server_session.session_id
+      command[:txnNum] = generate_txn_num
+      begin
+        yield(command, server)
+      rescue SocketError
+        collection.cluster.scan!
+        server = client.cluster.next_primary
+        yield(command, server)
+      end
+    end
+
     private
+
+    def retrying_writes?
+      @retrying_writes ||= !!options[:retry_writes]
+    end
+
+    def generate_txn_num
+      @txn_num += 1
+    end
 
     def causally_consistent_reads?
       options[:causally_consistent_reads]
@@ -70,6 +90,7 @@ module Mongo
 
     def set_operation_time(result)
       @operation_time = result.operation_time
+      result
     end
 
     class ServerSession
@@ -81,6 +102,8 @@ module Mongo
       TIMEOUT_MINUTES = 'timeoutMinutes'.freeze
 
       LAST_USE = 'lastUse'.freeze
+
+      attr_reader :session_id
 
       def initialize(client)
         start(client)

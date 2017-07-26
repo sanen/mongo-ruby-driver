@@ -47,7 +47,7 @@ module Mongo
     attr_reader :session
 
     # Get client, cluster, read preference, and write concern from client.
-    def_delegators :database, :client, :cluster
+    def_delegators :database, :client, :cluster, :with_session_write_retry
 
     # Delegate to the cluster for the next primary.
     def_delegators :cluster, :next_primary
@@ -175,11 +175,13 @@ module Mongo
       if (options[:collation] || options[Operation::COLLATION]) && !server.features.collation_enabled?
         raise Error::UnsupportedCollation.new
       end
-      Operation::Commands::Create.new({
-                                        selector: operation,
-                                        db_name: database.name,
-                                        write_concern: write_concern
-                                      }).execute(server)
+      with_session_write_retry(operation) do |command, server|
+        Operation::Commands::Create.new({
+                                          selector: command,
+                                          db_name: database.name,
+                                          write_concern: write_concern
+                                        }).execute(server)
+      end
     end
 
     # Drop the collection. Will also drop all indexes associated with the
@@ -194,12 +196,14 @@ module Mongo
     #
     # @since 2.0.0
     def drop
-      Operation::Commands::Drop.new({
-                                      selector: { :drop => name },
-                                      db_name: database.name,
-                                      write_concern: write_concern
-                                    }).execute(next_primary)
-
+      selector = { :drop => name }
+      with_session_write_retry(selector) do |command, server|
+        Operation::Commands::Drop.new({
+                                          selector: command,
+                                          db_name: database.name,
+                                          write_concern: write_concern
+                                      }).execute(server)
+      end
     rescue Error::OperationFailure => ex
       raise ex unless ex.message =~ /ns not found/
       false
@@ -353,16 +357,16 @@ module Mongo
     #
     # @since 2.0.0
     def insert_one(document, options = {})
-      write_with_retry do
+      with_session_write_retry(options) do |opts, server|
         Operation::Write::Insert.new(
           :documents => [ document ],
           :db_name => database.name,
           :coll_name => name,
           :write_concern => write_concern,
           :bypass_document_validation => !!options[:bypass_document_validation],
-          :options => options,
+          :options => opts,
           :id_generator => client.options[:id_generator]
-        ).execute(next_primary)
+        ).execute(server)
       end
     end
 

@@ -37,7 +37,7 @@ module Mongo
         def_delegators :view, :collection, :read, :cluster
 
         # Delegate necessary operations to the collection.
-        def_delegators :collection, :database
+        def_delegators :collection, :database, :with_session_write_retry
 
         # The reroute message.
         #
@@ -88,10 +88,39 @@ module Mongo
           self.class.new(view, pipeline, options.merge(explain: true)).first
         end
 
+        # Iterate through documents returned by a query with this +View+.
+        #
+        # @example Iterate through the result of the view.
+        #   view.each do |document|
+        #     p document
+        #   end
+        #
+        # @return [ Enumerator ] The enumerator.
+        #
+        # @since 2.0.0
+        #
+        # @yieldparam [ Hash ] Each matching document.
+        def each
+          return super unless builder.write?
+          with_session_write_retry({}) do |opts, server|
+            @options = @options.merge(opts)
+            result = send_initial_query(server)
+            @cursor = Cursor.new(view, result, server)
+          end
+          @cursor.each do |doc|
+            yield doc
+          end if block_given?
+          @cursor.to_enum
+        end
+
         private
 
+        def builder
+          Builder::Aggregation.new(pipeline, view, options)
+        end
+
         def aggregate_spec
-          Builder::Aggregation.new(pipeline, view, options).specification
+          builder.specification
         end
 
         def new(options)
